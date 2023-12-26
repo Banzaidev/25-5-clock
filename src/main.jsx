@@ -1,8 +1,10 @@
 import { render } from 'react-dom'
-import './index.css'
+import App from './App'
 
 
 
 render(
-  <>Hello</>, document.getElementById('#root')
+  <>
+    <App></App>
+  </>, document.getElementById('root')
 )
