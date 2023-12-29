@@ -2,41 +2,64 @@
 import { useEffect, useState } from "react"
 
 export default function App(){
-    const [session,setSession] = useState(25)
-    const [pause, setPause] = useState(5)
+    const [session,setSession] = useState({
+        mm: 25,
+        ss: 0,
+        value: 25 //the value that appears in the UI
+    })
+    const [pause, setPause] = useState({
+        mm: 5,
+        ss: 0,
+        value: 5 //the value that appears in the UI
+    })
+
     const [statusTimer, setStatusTimer] = useState('play')
-    const [timer, setTimer] = useState({
-        mm: session,
-        ss: 0
-    })
-    const [timerPause, setTimerPause] = useState({
-        mm: pause,
-        ss: 0
-    })
 
     useEffect(()=> {
         let interval;
         if(statusTimer == 'pause'){
-            if(timer.ss != 0){
+            console.log(session)
+            if(session.ss != 0){
                 interval = setInterval(()=>{
-                    console.log(timer)
-                    setTimer((prevTimer) => {
-                        return({...prevTimer, ss: prevTimer.ss - 1})
+                    setSession((prevSession) => {
+                        return({...prevSession, ss: prevSession.ss - 1})
                     })
                 }, 1000)
                 
             }else{
-                if(timer.mm > 0){
+                if(session.mm > 0){
                     console.log('0s')
-                    setTimer((prevTimer) => {return({mm: prevTimer.mm - 1, ss: 60})})
+                    setSession((prevSession) => {return({...prevSession, mm: prevSession.mm - 1, ss: 59})})
                 }
 
             }
+            console.log(session)
         }
         return () => clearInterval(interval)
 
 
-    }, [statusTimer, timer])
+    })
+
+    function incrementState(setStateFunction) {
+        setStateFunction((prevState) => {
+            if(prevState.mm < 60){
+                return({...prevState, mm: prevState.mm + 1, ss: 0})
+            }else{
+                return prevState
+            }
+        })
+
+    }
+
+    function decrementState(setStateFunction){
+        setStateFunction((prevState) => {
+            if(prevState.mm > 1){
+                return({...prevState, mm: prevState.mm - 1, ss:0})
+            }else{
+                return prevState
+            }
+        })
+    }
 
     const handleSessionBreakControls = (e) => {
         const sessionOrBreak = (e.target.id.split('-'))[0] //session or break
@@ -44,19 +67,22 @@ export default function App(){
         switch(sessionOrBreak){
             case 'session':
                 if(incrementOrDecrement == 'increment'){
-                    setSession((prevSession) => prevSession < 60 ? prevSession + 1 : prevSession) 
+                    incrementState(setSession)
                 }else{
-                    setSession((prevSession) => prevSession > 1 ? prevSession - 1 : prevSession)
+                    decrementState(setSession)
                 }
-                setTimer((prevTimer) => {return({mm: session, ss: 0})})
-                console.log(session, timer)
+                setSession((prevSession) => {return({...prevSession, value: prevSession.mm})})
+                console.log(session)
                 break
             case 'break':
                 if(incrementOrDecrement == 'increment'){
-                    setPause((prevPause) => prevPause < 60 ? prevPause + 1 : prevPause)
+                    incrementState(setPause)
+                    console.log(pause)
                 }else{
-                    setPause((prevPause) => prevPause > 1 ? prevPause - 1 : prevPause)
+                    decrementState(setPause)
                 }
+                setPause((prevPause) => {return({...prevPause, value: prevPause.mm})})
+                console.log(pause)
                 break
 
         }
@@ -69,8 +95,19 @@ export default function App(){
         }else{
             setStatusTimer('pause')
         }
+    }
 
-
+    const handleReset = () => {
+        setSession({
+            mm: 25,
+            ss: 0,
+            value: 25
+        })
+        setPause({
+            mm: 5,
+            ss: 0,
+            value: 5
+        })
     }
 
 
@@ -80,22 +117,22 @@ export default function App(){
             <div id='break'>
                 <p id='break-label'>Break Length</p>
                 <button onClick={(e) => handleSessionBreakControls(e)} id="break-decrement">-</button> 
-                <p id='break-length'>{pause}</p>
+                <p id='break-length'>{pause.value}</p>
                 <button onClick={(e) => handleSessionBreakControls(e)} id="break-increment">+</button> 
             </div>
             <div id='session'>
                 <p id='session-label'>Session Length</p>
                 <button onClick={(e) => handleSessionBreakControls(e)} id="session-decrement">-</button>
-                <p id='session-length'>{session}</p>
+                <p id='session-length'>{session.value}</p>
                 <button onClick={(e) => handleSessionBreakControls(e)} id="session-increment">+</button>
             </div>
             <div id='timer'>
                 <p id='timer-label'>Session</p>
-                <p id='timer-left'>{(timer.mm == 0 && timer.ss == 0) ? pause : `${timer.mm}:${timer.ss}`}</p>
+                <p id='timer-left'>{(session.mm == 0 && session.ss == 0) ? pause : `${session.mm}:${session.ss}`}</p>
             </div>
             <div id='timer-controls'>
                 <button onClick={(e) => handlePlayStop(e)} id='start_stop'>{statusTimer}</button>
-                <button id='reset'></button>
+                <button onClick={() => handleReset()}id='reset'>reset</button>
             </div>
             <audio id='beep'></audio> 
         </>
