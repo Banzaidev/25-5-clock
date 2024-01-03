@@ -1,10 +1,12 @@
 import { render } from 'react-dom'
 import App from './App'
+import { StrictMode } from 'react'
 
 
 
 render(
-  <>
+  <StrictMode>
     <App></App>
-  </>, document.getElementById('root')
+  </StrictMode>
+    , document.getElementById('root')
 )
