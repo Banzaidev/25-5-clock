@@ -1,35 +1,46 @@
 
+/* This script works perfectly but, it doesn't make all the tests of FCC pass */
+
 import { useEffect, useState } from "react"
 
-export default function App(){
+export default function AppPrev(){
     const [session,setSession] = useState({
         mm: 25,
-        d: new Date(0, 0, 0, 0, 25, 0),
+        ss: 0,
+        value: 25 //used for reset session
     })
     const [pause, setPause] = useState({
         mm: 5,
-        d: new Date(0, 0, 0, 0, 5, 0),
+        ss: 0,
+        value: 5 //used for reset pause
     })
 
     const [statusTimer, setStatusTimer] = useState('play')
     const [sessionOrPause, setSessionOrPause] = useState('Session') // set Session or Break in timer-label
     const audioTag = document.querySelector('#beep')
 
-    const timeLeft = (date) => ((date.getHours() * 60)+ (date.getMinutes() * 60) + date.getSeconds())
+    function controlSessionPauseInterval(state, setStateFunc){
+        let interval;
+        if(state.ss != 0){
+            interval = setInterval(()=>{
+                setStateFunc((prevState) => {
+                    return({...prevState, ss: prevState.ss - 1})
+                })
+            }, 1000)
+            
+        }else{
+            if(state.mm > 0){
+                setTimeout(() => {
+                    setStateFunc((prevState) => {return({...prevState, mm: prevState.mm - 1, ss: 59})})
+                }, 1000) 
+            }
 
-    function setSessionPauseInterval(state, setStateFunc){
-       let interval =  setInterval(() => {
-            if(timeLeft(state.d) != 0){
-                setStateFunc((prevState) => {return({...prevState, d: new Date(0, 0, 0, 0, prevState.d.getMinutes(), prevState.d.getSeconds() - 1) })})
-            }
-            if(state.d.getHours() == 1){
-                setStateFunc((prevState) => {return({...prevState, d: new Date(0, 0, 0, prevState.d.getHours() - 1, prevState.d.getMinutes(), prevState.d.getSeconds()) })})
-            }
-        }, 1000);
+        }
+        
         return interval
-    }
 
-    const awaitAudioPlayed = (audio) => {
+    }
+    const awaitAudioPlayed = async (audio) => {
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve('Resolved')
@@ -37,47 +48,47 @@ export default function App(){
         })
     }
 
-    const resetAndPlayAudio = async (sessionToBeCleared, audioToBePlayed, sessionOrBreak) => {
-        clearInterval(sessionToBeCleared)
-        audioToBePlayed.play()
-        await awaitAudioPlayed(audioToBePlayed)
-        setSessionOrPause(sessionOrBreak)
-    }
-    
-    useEffect(() => {
-        let sessionInterval;
-        let pauseInterval;
+    useEffect(()=> {
+        let intervalSession;
+        let intervalPause;
         if(statusTimer == 'pause'){
             (async () => {
-                if(timeLeft(session.d) != 0){
-                    if(sessionOrPause == 'Session'){
-                        sessionInterval = setSessionPauseInterval(session, setSession)
-                    }
-                     
-                }else{
-                    if(sessionOrPause == 'Session'){
-                        resetAndPlayAudio(sessionInterval, audioTag, 'Break')
+                
+                if((session.mm == 0 && session.ss == 0) && (pause.mm == 0 && pause.ss == 0)){
+                    handleReset(false, session.value, pause.value, true)
+                }
+
+                if(session.mm == 0 && session.ss == 0){
+                    if(sessionOrPause != 'Break'){
+                        audioTag.play()
+                        setSessionOrPause('Break')
+                        await awaitAudioPlayed(audioTag)
+                
+                        
                     }else{
-                        pauseInterval = setSessionPauseInterval(pause,setPause)
+                        intervalPause = controlSessionPauseInterval(pause,setPause)
+                    }
+                    
+                    if(pause.mm == 0 && pause.ss == 0){
+                        audioTag.play()
+                        setSessionOrPause('Session')
+                        await awaitAudioPlayed(audioTag)
                     }
 
-                    if(timeLeft(pause.d) == 0){
-                        if(sessionOrPause == 'Break'){
-                            resetAndPlayAudio(pauseInterval, audioTag, 'Session')
-                        }
+                }else{
+
+                    if(sessionOrPause == 'Session'){
+                        intervalSession = controlSessionPauseInterval(session, setSession)   
                     }
-                }
-    
-                if(timeLeft(session.d) == 0 && timeLeft(pause.d) == 0){
-                    handleReset(false,session.mm, pause.mm)
                 }
 
             })()
 
+
         }
         return () => {
-            clearInterval(sessionInterval)
-            clearInterval(pauseInterval)
+            clearInterval(intervalSession)
+            clearInterval(intervalPause)
         }
 
 
@@ -86,7 +97,7 @@ export default function App(){
     function incrementState(setStateFunction) {
         setStateFunction((prevState) => {
             if(prevState.mm < 60){
-                return({...prevState, mm: prevState.mm + 1, d: new Date(0, 0, 0, 0, prevState.d.getMinutes() + 1, 0)})
+                return({...prevState, mm: prevState.mm + 1, ss: 0})
             }else{
                 return prevState
             }
@@ -97,12 +108,14 @@ export default function App(){
     function decrementState(setStateFunction){
         setStateFunction((prevState) => {
             if(prevState.mm > 1){
-                return({...prevState, mm: prevState.mm - 1, d: new Date(0, 0, 0, 0, prevState.d.getMinutes() - 1, 0)})
+                return({...prevState, mm: prevState.mm - 1, ss:0})
             }else{
                 return prevState
             }
         })
     }
+
+    const setValue = (setStateFunc) => setStateFunc((prevState) => {return({...prevState, value: prevState.mm})})
 
     const handleSessionBreakControls = (e) => {
         const sessionOrBreak = (e.target.id.split('-'))[0] //session or break
@@ -114,6 +127,7 @@ export default function App(){
                 }else{
                     decrementState(setSession)
                 }
+                setValue(setSession)
                 break
             case 'break':
                 if(incrementOrDecrement == 'increment'){
@@ -121,6 +135,7 @@ export default function App(){
                 }else{
                     decrementState(setPause)
                 }
+                setValue(setPause)
                 break
 
         }
@@ -135,75 +150,79 @@ export default function App(){
         }
     }
 
-    const handleReset = (pauseTimer = true, mmSession = 25, mmPause = 5) => {
+    const handleReset = (pauseTimer = true, mmSession = 25, mmPause = 5, buttonClicked = true) => {
         if(statusTimer == 'pause' && pauseTimer){
             setStatusTimer('play')
         }
         setSession({
             mm: mmSession,
-            d: new Date(0, 0, 0, 0, mmSession, 0)
+            ss: 0,
+            value: mmSession
         })
         setPause({
             mm: mmPause,
-            d: new Date(0, 0, 0, 0, mmPause, 0)
+            ss: 0,
+            value: mmPause
         })
         audioTag.pause()
         audioTag.currentTime = 0;
-        setSessionOrPause('Session')
+        if(buttonClicked){
+            setSessionOrPause('Session')
+        }
+        
         
     }
 
-    const timerToBeShowed = (date) => {
-        let minutes = date.getMinutes()
-        let seconds = date.getSeconds()
-        
-        if(minutes == 0) {
-            if(date.getHours() == 1){
-                minutes = '60'
-            }else{
-                minutes = '00'
-            }
-            
-        }else if(minutes.toString().length == 1) {
-            minutes = `0${minutes}`
+    const timerToBeShowed = (state) => {
+        let minutes;
+        let seconds;
+
+        if(state.mm == 0) {
+            minutes = '00'
+        }else if(state.mm.toString().length == 1) {
+            minutes = `0${state.mm}`
+        }else{
+            minutes = state.mm
         }
 
-        if(seconds == 0){
+        if(state.ss == 0){
             seconds = '00'
-        }else if(seconds.toString().length == 1){
-            seconds = `0${seconds}`
+        }else if(state.ss.toString().length == 1){
+            seconds = `0${state.ss}`
+        }else{
+            seconds = state.ss
         }
 
         return(`${minutes}:${seconds}`)
     
     }
- 
+
     return(
         <>
             <h1>25 + 5 Clock</h1>
             <div id='break'>
                 <p id='break-label'>Break Length</p>
                 <button onClick={(e) => handleSessionBreakControls(e)} id="break-decrement">-</button> 
-                <p id='break-length'>{pause.mm}</p>
+                <p id='break-length'>{pause.value}</p>
                 <button onClick={(e) => handleSessionBreakControls(e)} id="break-increment">+</button> 
             </div>
             <div id='session'>
                 <p id='session-label'>Session Length</p>
                 <button onClick={(e) => handleSessionBreakControls(e)} id="session-decrement">-</button>
-                <p id='session-length'>{session.mm}</p>
+                <p id='session-length'>{session.value}</p>
                 <button onClick={(e) => handleSessionBreakControls(e)} id="session-increment">+</button>
             </div>
             <div id='timer'>
                 <p id='timer-label'>{sessionOrPause}</p>
                 <p id='time-left'>
-                 {sessionOrPause == 'Session' ? timerToBeShowed(session.d): timerToBeShowed(pause.d)} 
+                    {sessionOrPause == 'Session' ? timerToBeShowed(session) : timerToBeShowed(pause)}
                 </p>
             </div>
             <div id='timer-controls'>
                 <button onClick={(e) => handlePlayStop(e)} id='start_stop'>{statusTimer}</button>
                 <button onClick={() => handleReset()}id='reset'>reset</button>
             </div>
-            <audio preload="auto" src='https://cdn.freecodecamp.org/testable-projects-fcc/audio/BeepSound.wav' id='beep'></audio> 
+            <audio loop={false} preload="auto" src='https://cdn.freecodecamp.org/testable-projects-fcc/audio/BeepSound.wav' id='beep'></audio> 
         </>
     )
 }
