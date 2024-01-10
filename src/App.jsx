@@ -1,5 +1,9 @@
 
 import { useEffect, useState } from "react"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faPause, faPlay, faRotateRight, faPlus, faMinus } from "@fortawesome/free-solid-svg-icons"
+import manTechnologistImage from './assets/man-technologist.svg'
+import partyPopper from './assets/party-popper.svg'
 
 export default function App(){
     const [session,setSession] = useState({
@@ -105,8 +109,9 @@ export default function App(){
     }
 
     const handleSessionBreakControls = (e) => {
-        const sessionOrBreak = (e.target.id.split('-'))[0] //session or break
-        const incrementOrDecrement = (e.target.id.split('-'))[1] // increment or decrement
+        //with target doesn't work properly with font awesome
+        const sessionOrBreak = (e.currentTarget.id.split('-'))[0] //session or break
+        const incrementOrDecrement = (e.currentTarget.id.split('-'))[1] // increment or decrement
         switch(sessionOrBreak){
             case 'session':
                 if(incrementOrDecrement == 'increment'){
@@ -180,29 +185,52 @@ export default function App(){
  
     return(
         <>
-            <h1>25 + 5 Clock</h1>
-            <div id='break'>
-                <p id='break-label'>Break Length</p>
-                <button onClick={(e) => handleSessionBreakControls(e)} id="break-decrement">-</button> 
-                <p id='break-length'>{pause.mm}</p>
-                <button onClick={(e) => handleSessionBreakControls(e)} id="break-increment">+</button> 
-            </div>
-            <div id='session'>
-                <p id='session-label'>Session Length</p>
-                <button onClick={(e) => handleSessionBreakControls(e)} id="session-decrement">-</button>
-                <p id='session-length'>{session.mm}</p>
-                <button onClick={(e) => handleSessionBreakControls(e)} id="session-increment">+</button>
-            </div>
-            <div id='timer'>
+            <h1 id='title'>25 + 5 Clock</h1>
+            <div id='app'>
+                <div id="container-timer">
                 <p id='timer-label'>{sessionOrPause}</p>
-                <p id='time-left'>
-                 {sessionOrPause == 'Session' ? timerToBeShowed(session.d): timerToBeShowed(pause.d)} 
-                </p>
+                <div id='timer-image'>{sessionOrPause == 'Session' ? <img id='image' src={manTechnologistImage} alt='Man Technologist'></img>: <img id='image' src={partyPopper} alt='Party Popper'></img>} </div>
+                    <div id='timer-controls'>
+                        <button onClick={(e) => handlePlayStop(e)} id='start_stop'>{statusTimer == 'play' ? <FontAwesomeIcon icon={faPlay} /> : <FontAwesomeIcon icon={faPause} /> }</button>
+                        <p id='time-left'>
+                            {sessionOrPause == 'Session' ? timerToBeShowed(session.d): timerToBeShowed(pause.d)} 
+                        </p>
+                        <button onClick={() => handleReset()}id='reset'><FontAwesomeIcon icon={faRotateRight}/></button>
+                    </div>
+                </div>
+
+                <div id="container-bs">
+                    <div id='break'>
+                        <div className="leaves leftB">
+                            <div className="leaf center"></div>
+                            <div className="leaf left"></div>
+                            <div className="leaf right"></div>
+                            
+                        </div>
+                        <p id='break-label'>Break Length</p>
+                        <div id="buttons">
+                            <button className='decrement' onClick={(e) => handleSessionBreakControls(e)} id="break-decrement"> <FontAwesomeIcon icon={faMinus}/> </button> 
+                                <p id='break-length'>{pause.mm}</p>
+                            <button  className='increment'onClick={(e) => handleSessionBreakControls(e)} id="break-increment"> <FontAwesomeIcon icon={faPlus}/> </button> 
+                        </div>
+                    </div>
+                    <div id='session'>
+                        <div className="leaves rightS">
+                            <div className="leaf center"></div>
+                            <div className="leaf left"></div>
+                            <div className="leaf right"></div>
+                        </div>
+                        <p id='session-label'>Session Length</p>
+                        
+                        <div id="buttons">
+                            <button className='decrement' onClick={(e) => handleSessionBreakControls(e)} id="session-decrement"> <FontAwesomeIcon icon={faMinus}/> </button>
+                                <p id='session-length'>{session.mm}</p>
+                            <button className='increment' onClick={(e) => handleSessionBreakControls(e)} id="session-increment"> <FontAwesomeIcon icon={faPlus}/> </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div id='timer-controls'>
-                <button onClick={(e) => handlePlayStop(e)} id='start_stop'>{statusTimer}</button>
-                <button onClick={() => handleReset()}id='reset'>reset</button>
-            </div>
+
             <audio preload="auto" src='https://cdn.freecodecamp.org/testable-projects-fcc/audio/BeepSound.wav' id='beep'></audio> 
         </>
     )
