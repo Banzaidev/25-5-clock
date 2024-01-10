@@ -180,6 +180,13 @@ body{
     background-color: #9b8660;
     cursor: pointer;
 }
+#link{
+    text-align: center;
+    color: white;
+}
+#link > a{
+    color: white;
+}
 
 @media screen and (min-width:279px) and (max-width: 376px){
     #container-timer{
@@ -227,8 +234,6 @@ body{
 
     
 
-
-    
 } 
 @media screen and (min-width: 667px) and (max-width:911px) {
     #time-left{

@@ -229,8 +229,9 @@ export default function App(){
                         </div>
                     </div>
                 </div>
+               
             </div>
-
+            <p id='link'>by <a href="https://github.com/Banzaidev">Banzaidev</a></p>
             <audio preload="auto" src='https://cdn.freecodecamp.org/testable-projects-fcc/audio/BeepSound.wav' id='beep'></audio> 
         </>
     )
